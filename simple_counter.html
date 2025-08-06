@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Štetje prometa</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f6fa;
+      color: #333;
+    }
+
+    header {
+      background-color: #7DA4DA;
+      padding: 1rem;
+      text-align: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    .counter-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: white;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .counter-label {
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+
+    .counter-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .counter-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    .btn {
+      background-color: #7DA4DA;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn:hover {
+      background-color: #6b94d1;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+    .header-content {
+      display: flex;              /* NOVO */
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: white;
+    }
+
+    .logo {
+      height: 50px;               /* NOVO: velikost logotipa */
+      object-fit: contain;
+    }
+
+  </style>
+</head>
+<body>
+  <header>Štetje prometa</header>
+  <div class="container">
+    <div class="counter-box">
+      <div class="counter-label">Pešec</div>
+      <div class="counter-controls">
+        <button class="btn" onclick="changeCount('pesec', -1)">−</button>
+        <div id="counter-pesec" class="counter-value">0</div>
+        <button class="btn" onclick="changeCount('pesec', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="counter-box">
+      <div class="counter-label">Avto</div>
+      <div class="counter-controls">
+        <button class="btn" onclick="changeCount('avto', -1)">−</button>
+        <div id="counter-avto" class="counter-value">0</div>
+        <button class="btn" onclick="changeCount('avto', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="counter-box">
+      <div class="counter-label">Bus</div>
+      <div class="counter-controls">
+        <button class="btn" onclick="changeCount('bus', -1)">−</button>
+        <div id="counter-bus" class="counter-value">0</div>
+        <button class="btn" onclick="changeCount('bus', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="counter-box">
+      <div class="counter-label">Število potnikov</div>
+      <div class="counter-controls">
+        <button class="btn" onclick="changeCount('potniki', -1)">−</button>
+        <div id="counter-potniki" class="counter-value">0</div>
+        <button class="btn" onclick="changeCount('potniki', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="counter-box">
+      <div class="counter-label">Kombi</div>
+      <div class="counter-controls">
+        <button class="btn" onclick="changeCount('kombi', -1)">−</button>
+        <div id="counter-kombi" class="counter-value">0</div>
+        <button class="btn" onclick="changeCount('kombi', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" onclick="exportCSV()">Izvoz v CSV</button>
+      <button class="btn" onclick="resetCounters()">Reset števcev</button>
+    </div>
+
+    <div class="header-content">
+      <img src="locus-logo.png" alt="Locus logo" class="logo" /> <!-- NOVO -->
+    </div>
+  </div>
+
+  <script>
+  const counterIds = ['pesec', 'avto', 'bus', 'potniki', 'kombi'];
+
+  function loadCounters() {
+    const saved = JSON.parse(localStorage.getItem('stetje')) || {};
+    counterIds.forEach(id => {
+      const el = document.getElementById(`counter-${id}`);
+      el.textContent = saved[id] ?? 0;
+    });
+  }
+
+  function saveCounters() {
+    const current = {};
+    counterIds.forEach(id => {
+      const el = document.getElementById(`counter-${id}`);
+      current[id] = parseInt(el.textContent);
+    });
+    localStorage.setItem('stetje', JSON.stringify(current));
+  }
+
+  function changeCount(id, delta) {
+    const el = document.getElementById(`counter-${id}`);
+    let current = parseInt(el.textContent);
+    current = Math.max(0, current + delta);
+    el.textContent = current;
+    saveCounters();
+  }
+
+  function resetCounters() {
+    counterIds.forEach(id => {
+      const el = document.getElementById(`counter-${id}`);
+      el.textContent = 0;
+    });
+    localStorage.removeItem('stetje');
+    localStorage.removeItem('csv_zgodovina'); // 🧹 CSV zgodovina se zbriše
+  }
+
+  function exportCSV() {
+    const now = new Date().toISOString();
+    const values = counterIds.map(id => document.getElementById(`counter-${id}`).textContent);
+    const row = `${now},"${values[0]}","${values[1]}","${values[2]}","${values[3]}","${values[4]}"`;
+
+    // 📌 Zgodovina (LIFO)
+    const historyKey = 'csv_zgodovina';
+    let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+    history.unshift(row); // 🔄 Dodamo na začetek (LIFO)
+    localStorage.setItem(historyKey, JSON.stringify(history));
+
+    const header = `DateTime,"pesec","avto","bus","st. potnikov","kombi"\n`;
+    const csvContent = header + history.join('\n') + '\n';
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "stetje_prometa.csv");
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  window.onload = loadCounters;
+</script>
+</body>
+</html>
