@@ -439,6 +439,26 @@
     let current = parseInt(el.textContent);
     current = Math.max(0, current + delta);
     el.textContent = current;
+
+    // 👇 If this is a main vehicle type with passenger counter, auto-add +1 passenger on increment
+    const passengerLinked = {
+      'avtomobil': 'avtomobil-potniki',
+      'kombi': 'kombi-potniki',
+      'mestni-avtobus': 'mestni-avtobus-potniki',
+      'solski-avtobus': 'solski-avtobus-potniki',
+      'delavski-avtobus': 'delavski-avtobus-potniki',
+      'turisticni-avtobus': 'turisticni-avtobus-potniki'
+    };
+
+    if (delta > 0 && passengerLinked[id]) {
+      const passEl = document.getElementById(`counter-${passengerLinked[id]}`);
+      if (passEl) {
+        let passVal = parseInt(passEl.textContent);
+        passVal = Math.max(0, passVal + 1);
+        passEl.textContent = passVal;
+      }
+    }
+
     saveCounters();
   }
 
@@ -533,8 +553,10 @@
 
     // Shrani datoteko
     const now = new Date();
-    const fileName = `stetje_prometa_${now.toISOString().slice(0,16).replace(/[:T]/g, "-")}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    const pad = n => n.toString().padStart(2, '0');
+    const localFileName = `stetje_prometa_${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}-${pad(now.getMinutes())}.xlsx`;
+
+    XLSX.writeFile(wb, localFileName);
   }
 
   window.onload = () => {
